@@ -1,8 +1,10 @@
+//Libraries
 #include <IRremote.h>
 #include "SR04.h"
 #include <Servo.h>
 Servo steer;
 
+//Connecting pins on Arduino
 int m1cspeed = 5;
 int m1d1 = 4;
 int m1d2 = 3;
@@ -24,6 +26,7 @@ long distance;
 
 int beep = 2;
 
+//Activates a buzzer to make a horn sound
 void horn(){
   digitalWrite(beep, HIGH);
   delay(80);
@@ -34,6 +37,7 @@ void horn(){
   digitalWrite(beep, LOW);
 }
 
+//Steering functions
 void right(){
   steer.write(135);
 }
@@ -44,6 +48,7 @@ void straight(){
   steer.write(100);
 }
 
+//Automatically stops if the car gets closer than 20cm from an object using ultrasonic sensor
 void emergency_stop(){
   distance = sensor.Distance();
   if (distance < 20 && distance > 5){
@@ -56,6 +61,7 @@ void emergency_stop(){
   }
 }
 
+//Motor forward/backward/stop control
 void forward(){
   digitalWrite(m1d1, LOW);
   digitalWrite(m1d2, HIGH);
@@ -75,23 +81,25 @@ void backward(){
   digitalWrite(m2d2, HIGH);
   analogWrite(m2cspeed, m2speed);
 }
+
 void stop(){
   analogWrite(m1cspeed, 0);
   analogWrite(m2cspeed, 0);
 }
+
+//Receives and decodes IR signals and calls corresponding function
 void detect(){
 
-  //if (irrecv.decodedIRData.flags)
-  //{
+  if (irrecv.decodedIRData.flags)
+  {
 
-  //  irrecv.decodedIRData.decodedRawData = last_decodedRawData;
-  //  Serial.println("REPEAT!");
-  //} 
-  //else{
-    //output the IR code on the serial monitor
+    irrecv.decodedIRData.decodedRawData = last_decodedRawData;
+  } 
+  else
+  {
     Serial.print("IR code:0x");
     Serial.println(irrecv.decodedIRData.decodedRawData, HEX);
-  //}
+  }
   switch (irrecv.decodedIRData.decodedRawData){
     case 0xE0: Serial.println("horn"); horn(); break;
     case 0x4B9B: Serial.println("left"); left();   break;
@@ -105,6 +113,8 @@ void detect(){
   last_decodedRawData = irrecv.decodedIRData.decodedRawData;
   delay(500);
   }
+
+//Initializing
 }
 void setup() {
   pinMode(m1d1, OUTPUT);
@@ -123,6 +133,7 @@ void setup() {
   irrecv.enableIRIn();
 }
 
+//Running code
 void loop() {
   if (irrecv.decode()){
     detect();
